@@ -8,7 +8,7 @@ no coverage of banned weapons or captures, hard-coded point values for IO/ISL)
 
 import bs4
 from colorama import Fore, Style, Back
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import re
 import os
 
@@ -95,19 +95,23 @@ def get_killboard_path(team: str, player_name: str) -> str:
 
 
 def get_first_round_event(killboard: bs4.Tag) -> int:
-    last_event = 0
+    first_event = 0
 
     for row in killboard.find_all('tr'):
         if not row.get('class'): continue
 
         columns = row.find_all('td')
         date_string = columns[1].string
-        date = datetime.strptime(date_string, r'%Y-%m-%d %H:%M:%S')
+        date = datetime.strptime(date_string, r'%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
 
-        if date.replace(tzinfo=timezone.utc).timestamp() < START_TIME:
-            return last_event
+        if date.timestamp() < START_TIME:
+            return first_event
         else:
-            last_event = int(columns[0].string)
+            first_event = int(columns[0].string)
+
+    start_date = datetime.fromtimestamp(START_TIME, tz=timezone.utc)
+    if (date >= start_date and date < start_date + timedelta(minutes=15)):
+        return first_event
 
     raise Exception('Killboard is too old, could not find first event.')
 
