@@ -200,9 +200,11 @@ def print_team_scores(team: str) -> None:
     print(f"{Style.BRIGHT}{'Player Name':^28}|{'Points':^6}|{'Net':^3}|{'Kills':^5}|{'Deaths':^6}|{'HSR':^3}|{'TKs':^3}|{'Suicides':^8}{clr}")
 
     total_points = 0
+    net_points = 0
     
     for player, s in SCORES[team].items():
         total_points += s['points']
+        net_points += s['net']
 
         net_color = Fore.YELLOW if s['net'] < 0 else Fore.GREEN if s['net'] > 0 else ''
         print(f"{team_color}{player:<28}{clr}"
@@ -213,8 +215,10 @@ def print_team_scores(team: str) -> None:
             f"|{s['hsr']:>3.0%}"
             f"|{s['tks']:>3}"
             f"|{s['suicides']:>8}")
+        
 
-    print(f"{'':28} {Style.BRIGHT}{total_points:>6}{clr}")
+    team_net_color = Fore.YELLOW if net_points < 0 else Fore.GREEN if net_points > 0 else ''
+    print(f"{'':28} {Style.BRIGHT}{total_points:>6}{clr} {team_net_color}{net_points:>3}{clr}")
 
 
 def process_round(board: bs4.Tag, team: str, player: str, earliest: int, latest: int) -> dict[str, int]:
