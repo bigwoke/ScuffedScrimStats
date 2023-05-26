@@ -17,6 +17,7 @@ FACTIONS = {}
 KB_DIR = os.path.abspath(os.path.join('.', 'Killboards'))
 SCORES = {}
 START_TIME = 0
+END_TIME = 0
 TEAM_KILLED = []
 
 
@@ -117,8 +118,6 @@ def get_first_round_event(killboard: bs4.Tag) -> int:
 
 
 def get_last_round_event(killboard: bs4.Tag) -> int:
-    end_time = START_TIME + (15 * 60)
-
     for row in killboard.find_all('tr'):
         if not row.get('class'): continue
         
@@ -126,7 +125,7 @@ def get_last_round_event(killboard: bs4.Tag) -> int:
         date_string = columns[1].string
         date = datetime.strptime(date_string, r'%Y-%m-%d %H:%M:%S')
 
-        if date.replace(tzinfo=timezone.utc).timestamp() < end_time:
+        if date.replace(tzinfo=timezone.utc).timestamp() < END_TIME:
             return int(columns[0].string)
 
     raise Exception('Killboard is too old, could not find latest event.')
@@ -280,8 +279,15 @@ def process_round(board: bs4.Tag, team: str, player: str, earliest: int, latest:
         'tks': rnd_tks
     }
 
+
+def prompt_end_time() -> int:
+    end_time_input = input('Enter the end timestamp (or leave blank for 15 minute rounds): ')
+    return int(end_time_input) if end_time_input != '' else (START_TIME + (15 * 60))
+
+
 if __name__ == '__main__':
     START_TIME = int(input('Enter the start time of the round (epoch timestamp UTC): '))
+    END_TIME = prompt_end_time()
     SCORES = get_teams_and_players()
 
     player_stats = {}
